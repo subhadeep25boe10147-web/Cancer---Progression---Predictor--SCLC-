@@ -100,7 +100,7 @@ Make sure you have the following installed:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/subhadeep25boe10147-web/SCLC--Cancer--Progression--Predictor.git
+https://github.com/subhadeep25boe10147-web/Cancer---Progression---Predictor--SCLC-.git
 ```
 
 Navigate to the project directory:
