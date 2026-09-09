@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Research interface for exploring Small Cell Lung Cancer progression model inputs." />
+    <title>OncoMech AI | SCLC Progression Explorer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main>
+      <nav class="nav wrap">
+        <a class="brand" href="#top"><span class="brand-mark">◌</span> OncoMech AI</a>
+        <div class="nav-links"><a href="#explorer">Model explorer</a><a href="#about">About</a></div>
+        <span class="research-chip">Research interface</span>
+      </nav>
+
+      <section class="hero wrap" id="top">
+        <div class="eyebrow"><span></span> Small cell lung cancer</div>
+        <h1>Explore progression<br /><em>with context.</em></h1>
+        <p class="hero-copy">A research-facing workspace for examining how clinical, biomechanical, and molecular inputs can shape a cancer progression score.</p>
+        <div class="hero-meta"><div><b>13</b><span>model inputs</span></div><div><b>3</b><span>risk bands</span></div><div><b>Live</b><span>stretch signal</span></div></div>
+        <a class="scroll-link" href="#explorer">Open model explorer <span>↓</span></a>
+      </section>
+
+      <section class="notice wrap"><span class="notice-icon">!</span><p><strong>For education and research only.</strong> This interactive demonstration is not a diagnostic, prognostic, or treatment decision tool. Do not use its output for clinical care.</p></section>
+
+      <section class="explorer wrap" id="explorer">
+        <div class="section-heading"><div><p class="eyebrow"><span></span> Interactive model</p><h2>Progression explorer</h2></div><button class="text-button" id="loadExample" type="button">Load example values ↗</button></div>
+        <div class="workspace">
+          <form id="predictorForm" novalidate>
+            <fieldset><legend><span>01</span> Patient profile</legend>
+              <div class="field-grid">
+                <label>Age <input required type="number" id="age" min="18" max="120" placeholder="e.g. 62" /><small>years</small></label>
+                <label>Sex <select id="sex"><option value="0">Female</option><option value="1">Male</option></select><small>recorded sex</small></label>
+                <label>Smoking status <select id="smoking"><option value="0">No</option><option value="1">Yes</option></select><small>current / prior</small></label>
+                <label>Smoking pack years <input required type="number" id="pack" min="0" max="200" step="0.1" placeholder="e.g. 20" /><small>pack-years</small></label>
+                <label>Tumor size <input required type="number" id="tumor" min="0" max="30" step="0.01" placeholder="e.g. 2.4" /><small>cm</small></label>
+              </div>
+            </fieldset>
+            <fieldset><legend><span>02</span> Biomechanical dynamics</legend>
+              <div class="field-grid">
+                <label>Stretch <input required type="number" id="stretch" min="0" max="50" step="0.1" placeholder="e.g. 10" /><small>% amplitude</small></label>
+                <label>Frequency <input required type="number" id="frequency" min="0" max="5" step="0.01" placeholder="e.g. 0.30" /><small>Hz</small></label>
+                <label>Stretch duration <input required type="number" id="duration" min="0" max="500" step="1" placeholder="e.g. 24" /><small>hours</small></label>
+                <label>Tissue stiffness <input required type="number" id="stiffness" min="0" max="100" step="0.1" placeholder="e.g. 11.2" /><small>kPa</small></label>
+              </div>
+            </fieldset>
+            <fieldset><legend><span>03</span> Molecular biomarkers</legend>
+              <div class="field-grid">
+                <label>Fibrosis grade <select id="fibrosis"><option value="0">0 — none</option><option value="1">1 — mild</option><option value="2">2 — moderate</option><option value="3">3 — marked</option><option value="4">4 — severe</option></select><small>ordinal scale</small></label>
+                <label>IL-6 <input required type="number" id="il6" min="0" max="500" step="0.1" placeholder="e.g. 28.8" /><small>arbitrary units</small></label>
+                <label>VEGF <input required type="number" id="vegf" min="0" max="1000" step="0.1" placeholder="e.g. 142.5" /><small>arbitrary units</small></label>
+                <label>Ki-67 <input required type="number" id="ki67" min="0" max="100" step="0.1" placeholder="e.g. 26.9" /><small>% positive</small></label>
+              </div>
+            </fieldset>
+            <div class="form-actions"><button class="secondary" type="reset" id="reset">Clear</button><button class="primary" type="submit">Estimate progression <span>→</span></button></div>
+          </form>
+
+          <aside class="results" aria-live="polite">
+            <div class="signal-card"><div class="card-label"><span class="pulse"></span> Mechanical signal</div><canvas id="signalChart" width="560" height="220" aria-label="Cyclic mechanical stretch chart"></canvas><div class="signal-legend"><span><i></i> Stretch amplitude</span><span id="signalReadout">Awaiting inputs</span></div></div>
+            <div class="score-card" id="scoreCard">
+              <div class="card-label">Model progression score <button id="info" type="button" aria-label="About the progression score">i</button></div>
+              <div class="empty-result" id="emptyResult"><span>○</span><p>Enter study variables<br />to run the model.</p></div>
+              <div class="score-result hidden" id="scoreResult"><div class="score-line"><strong id="scoreValue">0.000</strong><span>/ 1.000</span></div><div class="risk-row"><span id="riskDot"></span><b id="riskLabel">LOW</b><em id="riskDescription">Lower modeled progression signal</em></div><div class="meter"><i id="meterFill"></i></div><div class="meter-labels"><span>Low</span><span>Moderate</span><span>High</span></div></div>
+            </div>
+            <button class="report-button hidden" id="report" type="button">Print research summary <span>↗</span></button>
+          </aside>
+        </div>
+      </section>
+
+      <section class="about wrap" id="about"><p class="eyebrow"><span></span> Method context</p><div><h2>Designed for<br />exploration, not care.</h2><p>This web experience adapts the source project’s cancer progression workflow into a browser interface. It visualizes cyclic stretch while providing a transparent, illustrative score based on the submitted variables. A production research deployment should connect this interface to a versioned, validated model service and follow appropriate data-governance practices.</p></div></section>
+    </main>
+    <footer class="wrap"><span>OncoMech AI / SCLC progression explorer</span><span>Educational demonstration · 2026</span></footer>
+    <dialog id="infoDialog"><button id="closeDialog" aria-label="Close">×</button><p class="eyebrow"><span></span> About the score</p><h3>An exploratory signal, not a clinical result.</h3><p>The value is returned by the project’s trained Random Forest model, scaled from 0 to 1. Risk labels describe model ranges only and must never be used to diagnose, predict outcomes, or guide treatment.</p></dialog>
+    <script src="app.js"></script>
+  </body>
+</html>

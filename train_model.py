@@ -1,4 +1,5 @@
 import pandas as pd
+from pathlib import Path
 
 from sklearn.model_selection import train_test_split
 
@@ -43,6 +44,7 @@ mse = mean_squared_error(y_test, predictions)
 print("Mean Squared Error:", mse)
 
 # Save Model
+Path("dist").mkdir(exist_ok=True)
 joblib.dump(model, "dist/model.pkl")
 
 print("Model Saved Successfully")

@@ -1,5 +1,26 @@
 # 🫁 SCLC Cancer Progression Predictor
 
+## 🌐 Web Experience
+
+This repository now also includes a responsive, dependency-free browser experience:
+
+- `index.html` — application shell and research disclaimer
+- `styles.css` — responsive clinical/research visual design
+- `app.js` — live cyclic-stretch visualization and model request client
+- `server.py` — local API for the trained Random Forest model
+
+Start the local application server and open the displayed address:
+
+```powershell
+.\.venv\Scripts\python.exe server.py
+```
+
+Then visit `http://127.0.0.1:8000`. The site sends the form values to the exact model created by `train_model.py`; it must not be used for clinical care.
+
+### Deploy on Render
+
+The included `render.yaml` deploys this repository as a free Python web service. In Render, create a **New → Blueprint**, select this GitHub repository, and apply the detected blueprint. Render installs dependencies, retrains the supplied model during the build, and provides a public `onrender.com` URL. Free services may sleep after inactivity, so their first request can take about a minute to respond.
+
 An **AI-based machine learning application** designed to predict the **Cancer Progression Score (CPS)** in **Small Cell Lung Cancer (SCLC)** using selected clinical and experimental parameters.
 
 The project combines a trained machine learning model, a structured dataset, and a user-friendly desktop GUI to provide quick and accessible cancer progression predictions.
