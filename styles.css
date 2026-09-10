@@ -79,8 +79,31 @@ body {
 
 .hero {
   padding: 103px 0 76px;
+  display: flex;
+  align-items: center; 
+  justify-content: space-between;
+  gap: 50px; 
 }
 
+.hero-content {
+  flex: 1.2;
+  max-width: 600px;
+}
+
+.hero-image {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.hero-image img {
+  width: 100%;
+  max-width: 450px;
+  height: auto;
+  border-radius: 20px; 
+  box-shadow: 0 24px 48px rgba(7, 27, 50, 0.12); 
+  object-fit: cover;
+}
 .eyebrow {
   margin: 0 0 16px;
   color: var(--green);
