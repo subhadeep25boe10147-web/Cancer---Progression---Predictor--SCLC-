@@ -39,6 +39,7 @@ class AppHandler(SimpleHTTPRequestHandler):
             "/index.html": "/index.html",
             "/styles.css": "/styles.css",
             "/app.js": "/app.js",
+            "/assets/oncomech-ai-logo.png": "/assets/oncomech-ai-logo.png",
         }
         if self.path not in assets:
             self.send_error(HTTPStatus.NOT_FOUND, "Asset not found")
