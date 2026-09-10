@@ -34,13 +34,14 @@ class AppHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):  # noqa: N802 - stdlib HTTP hook
         """Expose only the browser assets; never publish the dataset or model file."""
-        assets = {
-            "/": "/index.html",
-            "/index.html": "/index.html",
-            "/styles.css": "/styles.css",
-            "/app.js": "/app.js",
-            "/assets/oncomech-ai-logo.png": "/assets/oncomech-ai-logo.png",
-        }
+        {
+  "/": "/index.html",
+  "/index.html": "/index.html",
+  "/styles.css": "/styles.css",
+  "/app.js": "/app.js",
+  "/assets/oncomech-ai-logo.png": "/assets/oncomech-ai-logo.png",
+  "/assets/logo-website.jpeg": "/assets/logo-website.jpeg"
+}
         if self.path not in assets:
             self.send_error(HTTPStatus.NOT_FOUND, "Asset not found")
             return
