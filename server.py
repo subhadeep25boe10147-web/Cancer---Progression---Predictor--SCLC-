@@ -34,7 +34,7 @@ class AppHandler(SimpleHTTPRequestHandler):
 
     def do_GET(self):  # noqa: N802 - stdlib HTTP hook
         """Expose only the browser assets; never publish the dataset or model file."""
-        {
+        assets={
   "/": "/index.html",
   "/index.html": "/index.html",
   "/styles.css": "/styles.css",
