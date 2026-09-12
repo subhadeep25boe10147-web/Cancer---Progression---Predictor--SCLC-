@@ -1,6 +1,13 @@
-streamlit
+# Your existing core ML libraries
 pandas
 numpy
 scikit-learn
 joblib
-matplotlib
+
+# The new real-time web server libraries
+flask
+flask-socketio==5.3.6
+eventlet==0.33.3
+
+# Used in the backend to calculate Heart Rate (BPM) from the ECG stream
+scipy==1.11.3
