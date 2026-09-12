@@ -1,11 +1,13 @@
 """Local web server that exposes the project's trained SCLC model with Live ECG Streaming."""
 
+# 1. Compiler directives MUST be the absolute first line
 from __future__ import annotations
 
-# CRITICAL: Monkey patching must happen before other imports for async websockets to work
+# 2. Eventlet monkey patching MUST happen before ANY other standard imports
 import eventlet
 eventlet.monkey_patch()
 
+# 3. Now it is safe to load the rest of the libraries
 import json
 import os
 from pathlib import Path
@@ -136,5 +138,5 @@ def handle_live_stream(data):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", "8000"))
-    print(f"OncoMech AI Streaming Server is running at http://127.0.0.1:{port}")
-    socketio.run(app, host="0.0.0.0", port=port, debug=True)
+    print(f"OncoMech AI Streaming Server is running at http://0.0.0.0:{port}")
+    socketio.run(app, host="0.0.0.0", port=port, debug=False)
