@@ -7,7 +7,12 @@ const ecgCanvas = $("ecgChart"), ecgCtx = ecgCanvas.getContext("2d");
 
 // Live ECG State
 const ecgPoints = Array(150).fill(0);
-const socket = io(); // Initialize WebSocket
+
+// Initialize WebSocket with explicit cloud transport settings
+const socket = io({
+  transports: ['websocket', 'polling'],
+  reconnectionAttempts: 5
+});
 
 function value(id) { return Number($(id).value) || 0; }
 
@@ -28,6 +33,10 @@ function drawChart() {
 // --- LIVE ECG DRAW LOGIC ---
 function drawECGChart() {
   const box = ecgCanvas.getBoundingClientRect(), ratio = devicePixelRatio || 1;
+  
+  // Prevent drawing if the canvas hasn't been sized by CSS yet
+  if (box.width === 0 || box.height === 0) return;
+  
   ecgCanvas.width = box.width * ratio; ecgCanvas.height = box.height * ratio; ecgCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
   const w = box.width, h = box.height;
   ecgCtx.clearRect(0,0,w,h); ecgCtx.strokeStyle = "rgba(16,185,129,0.15)"; ecgCtx.lineWidth = 1;
@@ -71,7 +80,6 @@ socket.on('connect', () => {
   }, 40);
 });
 
-
 // --- MODEL PREDICTION LOGIC ---
 function payload() {
   return {Age:value("age"), Sex:value("sex"), Smoking:value("smoking"), Smoking_PackYears:value("pack"),
@@ -113,5 +121,9 @@ $("loadExample").addEventListener("click", () => {const ex={age:65,sex:0,smoking
 ["stretch","frequency"].forEach(id=>$(id).addEventListener("input",drawChart));
 $("info").addEventListener("click",()=>$("infoDialog").showModal()); $("closeDialog").addEventListener("click",()=>$("infoDialog").close());
 $("report").addEventListener("click",()=>window.print()); window.addEventListener("resize", () => { drawChart(); drawECGChart(); });
-drawChart();
-drawECGChart();
+
+// Wait for the CSS and layout to fully load before drawing the canvases
+window.addEventListener("load", () => {
+  drawChart();
+  drawECGChart();
+});
