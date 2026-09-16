@@ -1,4 +1,4 @@
-"""Local web server that exposes the project's trained SCLC model with Live ECG Streaming."""
+"""Local web server that exposes the project's trained SCLC model with Live ECG & Stretch Streaming."""
 
 # 1. Compiler directives MUST be the absolute first line
 from __future__ import annotations
@@ -107,19 +107,25 @@ def predict():
         return jsonify({"error": f"Prediction failed: {error}"}), 500
 
 # ==========================================
-# 3. LIVE ECG WEBSOCKET ROUTE
+# 3. LIVE SENSOR WEBSOCKET ROUTE (UPDATED)
 # ==========================================
-@socketio.on('ecg_data')
+@socketio.on('sensor_data')
 def handle_live_stream(data):
-    """Processes incoming sensor packets and silently recalculates the progression score."""
+    """Processes incoming sensor packets (ECG & Stretch) and silently recalculates the progression score."""
     try:
-        ecg_val = float(data.get('value', 0))
+        # 1. Extract BOTH values from the incoming socket payload
+        ecg_val = float(data.get('ecg_value', 0))
+        stretch_val = float(data.get('stretch_value', 0))
+        
         inference_buffer.append(ecg_val)
 
-        # Broadcast raw signal point for the visual oscilloscope
-        emit('signal_feed', {'val': ecg_val}, broadcast=True)
+        # 2. Broadcast BOTH signals back to the frontend dashboard for plotting
+        emit('signal_feed', {
+            'ecg_val': ecg_val,
+            'stretch_val': stretch_val
+        }, broadcast=True)
 
-        # Calculate heart rate and update the score in the background
+        # 3. Calculate heart rate and update the score in the background
         if len(inference_buffer) == 300:
             signal_array = np.array(inference_buffer)
             peaks, _ = find_peaks(signal_array, distance=40, height=np.mean(signal_array))
