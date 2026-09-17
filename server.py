@@ -142,7 +142,8 @@ def handle_live_stream(data):
             
             emit('biomechanics_update', {
                 'amplitude': round(stretch_amplitude, 1),
-                'frequency': round(stretch_hz, 2)
+                'frequency': round(stretch_hz, 2),
+                'bpm': int(bpm)
             }, broadcast=True)
 
     except Exception as e:
