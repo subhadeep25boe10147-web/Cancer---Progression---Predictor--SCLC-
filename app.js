@@ -20,7 +20,8 @@ function value(id) { return Number($(id).value) || 0; }
 // --- LIVE ECG DRAW LOGIC ---
 function drawECGChart() {
   const box = ecgCanvas.getBoundingClientRect(), ratio = devicePixelRatio || 1;
-  if (box.width === 0 || box.height === 0) return; 
+  
+  if (box.width === 0 || box.height === 0) return; // Prevent drawing if not sized
   
   ecgCanvas.width = box.width * ratio; ecgCanvas.height = box.height * ratio; ecgCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
   const w = box.width, h = box.height;
@@ -32,6 +33,7 @@ function drawECGChart() {
   ecgCtx.strokeStyle = "#10b981"; ecgCtx.lineWidth = 2; ecgCtx.beginPath();
   for(let i=0; i<ecgPoints.length; i++) {
     const x = (i / (ecgPoints.length - 1)) * w;
+    // Map signal amplitude to canvas height
     const y = h/2 - (ecgPoints[i] / 100) * (h/2);
     i ? ecgCtx.lineTo(x,y) : ecgCtx.moveTo(x,y);
   } 
@@ -41,6 +43,7 @@ function drawECGChart() {
 // --- LIVE STRETCH DRAW LOGIC ---
 function drawStretchChart() {
   const box = stretchCanvas.getBoundingClientRect(), ratio = devicePixelRatio || 1;
+  
   if (box.width === 0 || box.height === 0) return;
   
   stretchCanvas.width = box.width * ratio; stretchCanvas.height = box.height * ratio; stretchCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -53,6 +56,7 @@ function drawStretchChart() {
   stretchCtx.strokeStyle = "#3b82f6"; stretchCtx.lineWidth = 2; stretchCtx.beginPath();
   for(let i=0; i<stretchPoints.length; i++) {
     const x = (i / (stretchPoints.length - 1)) * w;
+    // Map stretch signal to canvas height
     const y = h/2 - (stretchPoints[i] / 100) * (h/2);
     i ? stretchCtx.lineTo(x,y) : stretchCtx.moveTo(x,y);
   } 
@@ -61,30 +65,44 @@ function drawStretchChart() {
 
 // --- WEBSOCKET EVENT LISTENERS ---
 socket.on('signal_feed', (data) => {
+  // Update ECG buffer and redraw
   ecgPoints.push(data.ecg_val);
   ecgPoints.shift();
   drawECGChart();
 
+  // Update Stretch buffer and redraw
   stretchPoints.push(data.stretch_val);
   stretchPoints.shift();
   drawStretchChart();
 });
 
 socket.on('score_feed', (data) => {
+  // Only update the score dynamically if the user has already run the baseline prediction once
   if (!$("scoreResult").classList.contains("hidden")) {
     showResult(data.score);
   }
 });
 
-// Auto-fill form from calculated live backend data
+// Auto-fill form and UI from calculated live backend data
 socket.on('biomechanics_update', (data) => {
-  $("liveAmplitude").textContent = data.amplitude + "%";
-  $("liveFrequency").textContent = data.frequency + " Hz";
-  $("stretchStatus").textContent = "Auto-synced to form";
+  // Update the Stretch UI
+  if ($("liveAmplitude") && $("liveFrequency")) {
+    $("liveAmplitude").textContent = data.amplitude + "%";
+    $("liveFrequency").textContent = data.frequency + " Hz";
+    $("stretchStatus").textContent = "Auto-synced to form";
+  }
 
+  // Update the ECG UI
+  if ($("liveHeartRate")) {
+    $("liveHeartRate").textContent = data.bpm + " BPM";
+    $("ecgStatus").textContent = "Auto-calculated";
+  }
+
+  // Automatically fill the input boxes on the left panel
   $("stretch").value = data.amplitude;
   $("frequency").value = data.frequency;
 
+  // Give the input boxes a quick flash
   $("stretch").style.backgroundColor = "#e0f2fe"; 
   $("frequency").style.backgroundColor = "#e0f2fe";
   setTimeout(() => {
@@ -93,15 +111,20 @@ socket.on('biomechanics_update', (data) => {
   }, 600);
 });
 
-// Built-in Telemetry Simulator
+// Built-in Telemetry Simulator (Runs until the Hardware is connected)
 socket.on('connect', () => {
   $("ecgStatus").textContent = "Connected: Stream active";
+  if ($("stretchStatus")) $("stretchStatus").textContent = "Connected: Stream active";
+  
   let time = 0;
   setInterval(() => {
     time += 0.12;
+    // Simulates an ECG wave
     let mockEcg = (Math.sin(time)*10) + (time%4<0.1 ? 65:0) - (time%4>0.1&&time%4<0.2 ? 25:0) + (Math.random()*5);
+    // Simulates a slower, rolling mechanical stretch wave (like breathing/movement)
     let mockStretch = (Math.sin(time * 0.4) * 40) + (Math.random() * 2);
     
+    // Emit the combined payload mimicking the hardware
     socket.emit('sensor_data', { ecg_value: mockEcg, stretch_value: mockStretch });
   }, 40);
 });
@@ -148,6 +171,7 @@ $("info").addEventListener("click",()=>$("infoDialog").showModal()); $("closeDia
 $("report").addEventListener("click",()=>window.print()); 
 window.addEventListener("resize", () => { drawECGChart(); drawStretchChart(); });
 
+// Wait for the CSS and layout to fully load before drawing the canvases
 window.addEventListener("load", () => {
   drawECGChart();
   drawStretchChart();
