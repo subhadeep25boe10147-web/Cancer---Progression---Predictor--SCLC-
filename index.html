@@ -53,8 +53,8 @@
             </fieldset>
             <fieldset><legend><span>02</span> Biomechanical dynamics</legend>
               <div class="field-grid">
-                <label>Stretch <input required type="number" id="stretch" min="0" max="50" step="0.1" placeholder="e.g. 10" /><small>% amplitude</small></label>
-                <label>Frequency <input required type="number" id="frequency" min="0" max="5" step="0.01" placeholder="e.g. 0.30" /><small>Hz</small></label>
+                <label>Stretch <input required type="number" id="stretch" min="0" max="100" step="0.1" placeholder="e.g. 10" /><small>% amplitude (Auto-syncs)</small></label>
+                <label>Frequency <input required type="number" id="frequency" min="0" max="5" step="0.01" placeholder="e.g. 0.30" /><small>Hz (Auto-syncs)</small></label>
                 <label>Stretch duration <input required type="number" id="duration" min="0" max="500" step="1" placeholder="e.g. 24" /><small>hours</small></label>
                 <label>Tissue stiffness <input required type="number" id="stiffness" min="0" max="100" step="0.1" placeholder="e.g. 11.2" /><small>kPa</small></label>
               </div>
@@ -84,16 +84,19 @@
               </div>
             </div>
 
-            <!-- 2. LIVE MECHANICAL STRETCH CARD (UPDATED) -->
+            <!-- 2. LIVE MECHANICAL STRETCH CARD -->
             <div class="signal-card" style="margin-bottom: 16px;">
               <div class="card-label">
                 <span class="pulse" style="background:#3b82f6; box-shadow: 0 0 8px #3b82f6;"></span> 
                 Live Mechanical Stretch Signal
               </div>
               <canvas id="stretchChart" width="560" height="150" aria-label="Live Stretch telemetry waveform" style="background: rgba(2, 6, 23, 0.6); border-radius: 6px; width: 100%; display: block;"></canvas>
-              <div class="signal-legend">
-                <span><i style="background:#3b82f6"></i> Stretch amplitude stream</span>
-                <span id="stretchStatus" style="font-family: 'DM Mono', monospace; font-size: 0.8rem; color: #3b82f6;">Active monitoring</span>
+              <div class="signal-legend" style="display: flex; justify-content: space-between;">
+                <span>
+                  <i style="background:#3b82f6"></i> 
+                  Live Stats: <strong id="liveAmplitude">--%</strong> amp | <strong id="liveFrequency">-- Hz</strong>
+                </span>
+                <span id="stretchStatus" style="font-family: 'DM Mono', monospace; font-size: 0.8rem; color: #3b82f6;">Awaiting signal...</span>
               </div>
             </div>
 
