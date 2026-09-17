@@ -98,17 +98,17 @@ socket.on('biomechanics_update', (data) => {
     $("ecgStatus").textContent = "Auto-calculated";
   }
 
-  // Automatically fill the input boxes on the left panel
+  // Automatically fill the input boxes on the left panel silently
   $("stretch").value = data.amplitude;
   $("frequency").value = data.frequency;
 
-  // Give the input boxes a quick flash
-  $("stretch").style.backgroundColor = "#e0f2fe"; 
-  $("frequency").style.backgroundColor = "#e0f2fe";
-  setTimeout(() => {
-    $("stretch").style.backgroundColor = "";
-    $("frequency").style.backgroundColor = "";
-  }, 600);
+  // PROFESSIONAL UI UPDATE: 
+  // Permanently link these live inputs to the blue stretch graph using text color and weight.
+  $("stretch").style.color = "#3b82f6"; 
+  $("stretch").style.fontWeight = "600";
+  
+  $("frequency").style.color = "#3b82f6";
+  $("frequency").style.fontWeight = "600";
 });
 
 // Built-in Telemetry Simulator (Runs until the Hardware is connected)
