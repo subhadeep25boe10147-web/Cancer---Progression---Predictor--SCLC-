@@ -9,7 +9,6 @@ const stretchCanvas = $("stretchChart"), stretchCtx = stretchCanvas.getContext("
 const ecgPoints = Array(150).fill(0);
 const stretchPoints = Array(150).fill(0);
 
-// Initialize WebSocket with explicit cloud transport settings
 const socket = io({
   transports: ['websocket', 'polling'],
   reconnectionAttempts: 5
@@ -20,8 +19,7 @@ function value(id) { return Number($(id).value) || 0; }
 // --- LIVE ECG DRAW LOGIC ---
 function drawECGChart() {
   const box = ecgCanvas.getBoundingClientRect(), ratio = devicePixelRatio || 1;
-  
-  if (box.width === 0 || box.height === 0) return; // Prevent drawing if not sized
+  if (box.width === 0 || box.height === 0) return; 
   
   ecgCanvas.width = box.width * ratio; ecgCanvas.height = box.height * ratio; ecgCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
   const w = box.width, h = box.height;
@@ -33,7 +31,6 @@ function drawECGChart() {
   ecgCtx.strokeStyle = "#10b981"; ecgCtx.lineWidth = 2; ecgCtx.beginPath();
   for(let i=0; i<ecgPoints.length; i++) {
     const x = (i / (ecgPoints.length - 1)) * w;
-    // Map signal amplitude to canvas height
     const y = h/2 - (ecgPoints[i] / 100) * (h/2);
     i ? ecgCtx.lineTo(x,y) : ecgCtx.moveTo(x,y);
   } 
@@ -43,7 +40,6 @@ function drawECGChart() {
 // --- LIVE STRETCH DRAW LOGIC ---
 function drawStretchChart() {
   const box = stretchCanvas.getBoundingClientRect(), ratio = devicePixelRatio || 1;
-  
   if (box.width === 0 || box.height === 0) return;
   
   stretchCanvas.width = box.width * ratio; stretchCanvas.height = box.height * ratio; stretchCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -56,7 +52,6 @@ function drawStretchChart() {
   stretchCtx.strokeStyle = "#3b82f6"; stretchCtx.lineWidth = 2; stretchCtx.beginPath();
   for(let i=0; i<stretchPoints.length; i++) {
     const x = (i / (stretchPoints.length - 1)) * w;
-    // Map stretch signal to canvas height
     const y = h/2 - (stretchPoints[i] / 100) * (h/2);
     i ? stretchCtx.lineTo(x,y) : stretchCtx.moveTo(x,y);
   } 
@@ -65,53 +60,42 @@ function drawStretchChart() {
 
 // --- WEBSOCKET EVENT LISTENERS ---
 socket.on('signal_feed', (data) => {
-  // Update ECG buffer and redraw
   ecgPoints.push(data.ecg_val);
   ecgPoints.shift();
   drawECGChart();
 
-  // Update Stretch buffer and redraw
   stretchPoints.push(data.stretch_val);
   stretchPoints.shift();
   drawStretchChart();
 });
 
 socket.on('score_feed', (data) => {
-  // Only update the score dynamically if the user has already run the baseline prediction once
   if (!$("scoreResult").classList.contains("hidden")) {
     showResult(data.score);
   }
 });
 
-// Auto-fill form and UI from calculated live backend data
 socket.on('biomechanics_update', (data) => {
-  // Update the Stretch UI
   if ($("liveAmplitude") && $("liveFrequency")) {
     $("liveAmplitude").textContent = data.amplitude + "%";
     $("liveFrequency").textContent = data.frequency + " Hz";
     $("stretchStatus").textContent = "Auto-synced to form";
   }
 
-  // Update the ECG UI
   if ($("liveHeartRate")) {
     $("liveHeartRate").textContent = data.bpm + " BPM";
     $("ecgStatus").textContent = "Auto-calculated";
   }
 
-  // Automatically fill the input boxes on the left panel silently
   $("stretch").value = data.amplitude;
   $("frequency").value = data.frequency;
 
-  // PROFESSIONAL UI UPDATE: 
-  // Permanently link these live inputs to the blue stretch graph using text color and weight.
   $("stretch").style.color = "#3b82f6"; 
   $("stretch").style.fontWeight = "600";
-  
   $("frequency").style.color = "#3b82f6";
   $("frequency").style.fontWeight = "600";
 });
 
-// Built-in Telemetry Simulator (Runs until the Hardware is connected)
 socket.on('connect', () => {
   $("ecgStatus").textContent = "Connected: Stream active";
   if ($("stretchStatus")) $("stretchStatus").textContent = "Connected: Stream active";
@@ -119,21 +103,21 @@ socket.on('connect', () => {
   let time = 0;
   setInterval(() => {
     time += 0.12;
-    // Simulates an ECG wave
     let mockEcg = (Math.sin(time)*10) + (time%4<0.1 ? 65:0) - (time%4>0.1&&time%4<0.2 ? 25:0) + (Math.random()*5);
-    // Simulates a slower, rolling mechanical stretch wave (like breathing/movement)
     let mockStretch = (Math.sin(time * 0.4) * 40) + (Math.random() * 2);
     
-    // Emit the combined payload mimicking the hardware
     socket.emit('sensor_data', { ecg_value: mockEcg, stretch_value: mockStretch });
   }, 40);
 });
 
 // --- MODEL PREDICTION LOGIC ---
 function payload() {
-  return {Age:value("age"), Sex:value("sex"), Smoking:value("smoking"), Smoking_PackYears:value("pack"),
+  return {
+    Patient_ID: $("patient_id").value || "Unknown_PT",
+    Age:value("age"), Sex:value("sex"), Smoking:value("smoking"), Smoking_PackYears:value("pack"),
     Stretch:value("stretch"), Frequency:value("frequency"), Stretch_Duration:value("duration"), Fibrosis:value("fibrosis"),
-    Tissue_Stiffness:value("stiffness"), IL6:value("il6"), VEGF:value("vegf"), Ki67:value("ki67"), Tumor_Size:value("tumor")};
+    Tissue_Stiffness:value("stiffness"), IL6:value("il6"), VEGF:value("vegf"), Ki67:value("ki67"), Tumor_Size:value("tumor")
+  };
 }
 
 async function predictWithModel() {
@@ -166,12 +150,52 @@ $("predictorForm").addEventListener("submit", async e => {
 });
 
 $("predictorForm").addEventListener("reset", () => setTimeout(() => clearResults()));
-$("loadExample").addEventListener("click", () => {const ex={age:65,sex:0,smoking:0,pack:5.6,tumor:2.13,stretch:11.3,frequency:.28,duration:18,stiffness:9,fibrosis:1,il6:33.1,vegf:195.9,ki67:31.8}; Object.entries(ex).forEach(([k,v])=>$(k).value=v); document.querySelector("#explorer").scrollIntoView({behavior:"smooth",block:"start"});});
-$("info").addEventListener("click",()=>$("infoDialog").showModal()); $("closeDialog").addEventListener("click",()=>$("infoDialog").close());
-$("report").addEventListener("click",()=>window.print()); 
+
+$("loadExample").addEventListener("click", () => {
+  const ex = {
+    patient_id:"PT-8842", age:65, sex:0, smoking:0, pack:5.6, tumor:2.13, stretch:11.3, 
+    frequency:.28, duration:18, stiffness:9, fibrosis:1, il6:33.1, vegf:195.9, ki67:31.8
+  }; 
+  Object.entries(ex).forEach(([k,v]) => { if($(k))$(k).value = v; }); 
+  document.querySelector("#explorer").scrollIntoView({behavior:"smooth",block:"start"});
+});
+
+$("info").addEventListener("click",()=>$("infoDialog").showModal()); 
+$("closeDialog").addEventListener("click",()=>$("infoDialog").close());
+
+// --- NEW: EXPORT CLINICAL REPORT TO CSV ---
+$("report").addEventListener("click", () => {
+  const patientId = $("patient_id").value || "Unknown_PT";
+  const score = $("scoreValue").textContent;
+  const risk = $("riskLabel").textContent;
+  
+  let csvContent = "data:text/csv;charset=utf-8,";
+  csvContent += "ONCOMECH AI - CLINICAL RESEARCH EXPORT\n\n";
+  csvContent += `Patient ID,${patientId}\n`;
+  csvContent += `Progression Score,${score}\n`;
+  csvContent += `Risk Band,${risk}\n\n`;
+  
+  csvContent += "CLINICAL INPUTS\n";
+  ids.forEach(id => {
+    csvContent += `${id.toUpperCase()},${$(id).value}\n`;
+  });
+  
+  csvContent += "\nLIVE BIOTELEMETRY AVERAGES\n";
+  csvContent += `Heart Rate,${$("liveHeartRate").textContent}\n`;
+  csvContent += `Stretch Amplitude,${$("liveAmplitude").textContent}\n`;
+  csvContent += `Stretch Frequency,${$("liveFrequency").textContent}\n`;
+  
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", `OncoMech_Report_${patientId}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
+
 window.addEventListener("resize", () => { drawECGChart(); drawStretchChart(); });
 
-// Wait for the CSS and layout to fully load before drawing the canvases
 window.addEventListener("load", () => {
   drawECGChart();
   drawStretchChart();
