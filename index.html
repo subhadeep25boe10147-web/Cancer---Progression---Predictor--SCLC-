@@ -78,9 +78,12 @@
                 Live Electrophysiological (ECG) Signal
               </div>
               <canvas id="ecgChart" width="560" height="150" aria-label="Live ECG telemetry waveform" style="background: rgba(2, 6, 23, 0.6); border-radius: 6px; width: 100%; display: block;"></canvas>
-              <div class="signal-legend">
-                <span><i style="background:#10b981"></i> Cardiac bio-potential stream</span>
-                <span id="ecgStatus" style="font-family: 'DM Mono', monospace; font-size: 0.8rem; color: #10b981;">Active monitoring</span>
+              <div class="signal-legend" style="display: flex; justify-content: space-between;">
+                <span>
+                  <i style="background:#10b981"></i> 
+                  Live Stats: <strong id="liveHeartRate">-- BPM</strong>
+                </span>
+                <span id="ecgStatus" style="font-family: 'DM Mono', monospace; font-size: 0.8rem; color: #10b981;">Awaiting signal...</span>
               </div>
             </div>
 
