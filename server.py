@@ -42,8 +42,9 @@ if not MODEL_PATH.exists():
 else:
     MODEL = joblib.load(MODEL_PATH)
 
-# Buffers and session state for the dynamic score modulator
+# Buffers and session state for the dynamic score modulator and auto-calculations
 inference_buffer = deque(maxlen=300)
+stretch_buffer = deque(maxlen=300)
 current_patient_state = {"baseline_score": 50.0}  # Default fallback score
 
 def calculate_dynamic_csp(baseline_score: float, heart_rate: float) -> float:
@@ -69,7 +70,6 @@ def serve_index():
 
 @app.route('/<path:path>')
 def serve_assets(path):
-    # Your exact whitelist of allowed files
     allowed_assets = [
         "index.html", "styles.css", "app.js", 
         "assets/oncomech-ai-logo.png", "assets/logo-website.jpeg"
@@ -87,7 +87,6 @@ def predict():
     try:
         inputs = request.get_json()
         
-        # Build dataframe using only the 13 features expected by the model
         patient_data = {name: float(inputs.get(name, 0)) for name in FEATURES}
         patient = pd.DataFrame([patient_data], columns=FEATURES)
         
@@ -96,7 +95,6 @@ def predict():
         else:
             baseline = 50.0
             
-        # Store this baseline so the live ECG stream can modify it
         current_patient_state["baseline_score"] = baseline
         
         return jsonify({"score": baseline}), 200
@@ -107,37 +105,45 @@ def predict():
         return jsonify({"error": f"Prediction failed: {error}"}), 500
 
 # ==========================================
-# 3. LIVE SENSOR WEBSOCKET ROUTE (UPDATED)
+# 3. LIVE SENSOR WEBSOCKET ROUTE 
 # ==========================================
 @socketio.on('sensor_data')
 def handle_live_stream(data):
-    """Processes incoming sensor packets (ECG & Stretch) and silently recalculates the progression score."""
+    """Processes incoming sensor packets (ECG & Stretch) and silently recalculates metrics."""
     try:
-        # 1. Extract BOTH values from the incoming socket payload
+        # Extract BOTH values from the incoming socket payload
         ecg_val = float(data.get('ecg_value', 0))
         stretch_val = float(data.get('stretch_value', 0))
         
         inference_buffer.append(ecg_val)
+        stretch_buffer.append(stretch_val)
 
-        # 2. Broadcast BOTH signals back to the frontend dashboard for plotting
+        # Broadcast BOTH signals back to the frontend dashboard for plotting
         emit('signal_feed', {
             'ecg_val': ecg_val,
             'stretch_val': stretch_val
         }, broadcast=True)
 
-        # 3. Calculate heart rate and update the score in the background
+        # Calculate heart rate, stretch metrics, and update the score in the background
         if len(inference_buffer) == 300:
-            signal_array = np.array(inference_buffer)
-            peaks, _ = find_peaks(signal_array, distance=40, height=np.mean(signal_array))
-
-            # 300 samples at ~60Hz = 5 second window -> (peaks / 5) * 60 = BPM
-            bpm = (len(peaks) / 5.0) * 60
-
-            # Calculate the updated score silently in the backend
+            
+            # --- 1. ECG Calculations ---
+            ecg_array = np.array(inference_buffer)
+            ecg_peaks, _ = find_peaks(ecg_array, distance=40, height=np.mean(ecg_array))
+            bpm = (len(ecg_peaks) / 5.0) * 60
             updated_score = calculate_dynamic_csp(current_patient_state["baseline_score"], bpm)
-
-            # Emit ONLY the updated score to the user dashboard
             emit('score_feed', {'score': updated_score}, broadcast=True)
+
+            # --- 2. Stretch Calculations (Auto-Fill) ---
+            stretch_array = np.array(stretch_buffer)
+            stretch_amplitude = np.max(stretch_array) - np.min(stretch_array)
+            stretch_peaks, _ = find_peaks(stretch_array, distance=60)
+            stretch_hz = len(stretch_peaks) / 5.0
+            
+            emit('biomechanics_update', {
+                'amplitude': round(stretch_amplitude, 1),
+                'frequency': round(stretch_hz, 2)
+            }, broadcast=True)
 
     except Exception as e:
         emit('server_error', {'message': str(e)})
