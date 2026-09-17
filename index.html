@@ -65,7 +65,6 @@
         overflow: hidden;
         transition: border-color 0.3s;
       }
-      /* Subtle hover glows matching the signal color */
       .signal-card:nth-of-type(1):hover { border-color: rgba(16, 185, 129, 0.4); box-shadow: 0 0 20px rgba(16, 185, 129, 0.05); }
       .signal-card:nth-of-type(2):hover { border-color: rgba(59, 130, 246, 0.4); box-shadow: 0 0 20px rgba(59, 130, 246, 0.05); }
       
@@ -237,8 +236,11 @@
               <div class="score-result hidden" id="scoreResult">
                 <div class="score-line" style="margin: 16px 0;"><strong id="scoreValue" style="font-size: 3rem; color: white;">0.000</strong><span style="color: #94a3b8; font-size: 1rem;"> / 1.000</span></div>
                 <div class="risk-row" style="margin-bottom: 16px;"><span id="riskDot" style="display:inline-block; width:12px; height:12px; border-radius:50%; margin-right:8px;"></span><b id="riskLabel" style="color: white; margin-right: 8px;">LOW</b><em id="riskDescription" style="color: #94a3b8; font-style: normal;">Lower modeled progression signal</em></div>
-                <div class="meter" style="background: rgba(255,255,255,0.1); height: 6px; border-radius: 3px; overflow: hidden; position: relative;"><i id="meterFill" style="position: absolute; left: 0; top: 0; height: 100%; width: 100%; background: white; transition: transform 0.5s ease-out; transform-origin: left; transform: scaleX(0);"></i></div>
-                <div class="meter-labels" style="display: flex; justify-content: space-between; color: #94a3b8; font-size: 0.75rem; margin-top: 8px;"><span>Low</span><span>Moderate</span><span>High</span></div>
+                
+                <!-- RESTORED: The original meter and labels with your native styles.css -->
+                <div class="meter"><i id="meterFill"></i></div>
+                <div class="meter-labels"><span>Low</span><span>Moderate</span><span>High</span></div>
+                
               </div>
             </div>
             <button class="report-button hidden" id="report" type="button" style="width: 100%; margin-top: 16px; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: white; padding: 12px; border-radius: 8px; cursor: pointer;">Print research summary <span>↗</span></button>
